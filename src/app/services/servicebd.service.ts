@@ -825,16 +825,14 @@ async agregarCarrito(id_album: number, id_usuario: number, cantidad: number): Pr
   // Método para registrar ventas con actualización del stock
   async registrarVenta(id_usuario: number, total_venta: number, carrito: Carrito[]): Promise<void> {
     try {
-      // Insertar la venta en la tabla 'tablaVenta'
       const resVenta = await this.database.executeSql(
         'INSERT INTO tablaVenta (total_venta, id_usuario) VALUES (?, ?)',
         [total_venta, id_usuario]
       );
       const id_venta = resVenta.insertId;
   
-      let detallesCompra = []; // Array para almacenar los detalles de cada artículo
+      let detallesCompra = [];
   
-      // Insertar cada artículo vendido en 'tablaArticuloVenta' y reducir el stock
       for (const album of carrito) {
         await this.database.executeSql(
           'INSERT INTO tablaArticuloVenta (id_venta, id_album, cantidad) VALUES (?, ?, ?)',
@@ -846,7 +844,6 @@ async agregarCarrito(id_album: number, id_usuario: number, cantidad: number): Pr
           [album.cantidad, album.id_album]
         );
   
-        // Agregar detalles del artículo actual al array detallesCompra
         detallesCompra.push({
           nombre_album: album.nombre_album,
           cantidad: album.cantidad,
@@ -854,29 +851,21 @@ async agregarCarrito(id_album: number, id_usuario: number, cantidad: number): Pr
         });
       }
   
-      // Convertir detallesCompra a JSON y guardar en tablaHistorialCompras
       const detalleCompraJSON = JSON.stringify(detallesCompra);
       await this.database.executeSql(
         'INSERT INTO tablaHistorialCompras (id_usuario, total_compra, detalle_compra) VALUES (?, ?, ?)',
         [id_usuario, total_venta, detalleCompraJSON]
       );
   
-      // Consulta para verificar los datos en tablaHistorialCompras después de la venta
-      const res = await this.database.executeSql('SELECT * FROM tablaHistorialCompras WHERE id_usuario = ?', [id_usuario]);
-      console.log('Datos en tablaHistorialCompras después de la venta:');
-      for (let i = 0; i < res.rows.length; i++) {
-        console.log(res.rows.item(i));
-      }
-  
-      // Emitir evento de cambio en el stock
       this.emitirCambioStock();
-      console.log('Venta registrada y stock actualizado correctamente. Historial de compra actualizado.');
-      
+      console.log('Venta registrada y stock actualizado correctamente.');
+  
     } catch (e) {
       console.error('Error al registrar la venta:', e);
       throw e;
     }
   }
+  
   
   
   

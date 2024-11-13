@@ -66,58 +66,56 @@ export class CarritoPage implements OnInit {
 
 
 
- async aceptarCompra() {
+  async aceptarCompra() {
     if (this.listaCarrito.length === 0) {
-        this.alerta.GenerarAlerta('Error', 'El carrito está vacío. Agrega productos para continuar.');
-        return;
+      this.alerta.GenerarAlerta('Error', 'El carrito está vacío. Agrega productos para continuar.');
+      return;
     }
-
+  
     this.storage.getItem('usuario_logueado').then(async (idUsuario: any) => {
-        if (!idUsuario) {
-            this.alerta.GenerarAlerta('Error', 'No hay un usuario logueado.');
-            return;
+      if (!idUsuario) {
+        this.alerta.GenerarAlerta('Error', 'No hay un usuario logueado.');
+        return;
+      }
+  
+      try {
+        const sinStock = [];
+        for (const album of this.listaCarrito) {
+          const stockDisponible = await this.bd.obtenerStockActual(album.id_album);
+  
+          if (stockDisponible < album.cantidad) {
+            sinStock.push(album.nombre_album);
+          }
         }
-
-        try {
-            const sinStock = [];
-            for (const album of this.listaCarrito) {
-                const stockDisponible = await this.bd.obtenerStockActual(album.id_album);
-
-                // Verifica si el stock disponible es menor que la cantidad en el carrito
-                if (stockDisponible < album.cantidad) {
-                    sinStock.push(album.nombre_album);
-                }
-            }
-
-            if (sinStock.length > 0) {
-                const nombresSinStock = sinStock.join(', ');
-                this.alerta.GenerarAlerta('Error', `Los siguientes productos no tienen stock suficiente para completar la compra: ${nombresSinStock}`);
-                return;
-            }
-
-            // Procede con la compra si todos los productos tienen stock
-            await this.bd.registrarVenta(idUsuario, this.totalCarrito, this.listaCarrito);
-
-            // Vacía el carrito después de la compra exitosa
-            await this.bd.vaciarCarrito(idUsuario);
-            this.router.navigate(['/boleta'], {
-                state: {
-                    usuario: this.infoUsuario,
-                    total: this.totalCarrito,
-                    albums: this.listaCarrito
-                }
-            });
-
-            this.toast.GenerarToast('Su compra fue realizada con éxito', 1000, 'middle');
-            console.log('Carrito vaciado exitosamente.');
-
-        } catch (e) {
-            this.alerta.GenerarAlerta('Error', 'Error al procesar la compra: ' + JSON.stringify(e));
+  
+        if (sinStock.length > 0) {
+          const nombresSinStock = sinStock.join(', ');
+          this.alerta.GenerarAlerta('Error', `Los siguientes productos no tienen stock suficiente para completar la compra: ${nombresSinStock}`);
+          return;
         }
+  
+        await this.bd.registrarVenta(idUsuario, this.totalCarrito, this.listaCarrito);
+  
+        await this.bd.vaciarCarrito(idUsuario);
+        this.router.navigate(['/boleta'], {
+          state: {
+            usuario: this.infoUsuario,
+            total: this.totalCarrito,
+            albums: this.listaCarrito
+          }
+        });
+  
+        this.toast.GenerarToast('Su compra fue realizada con éxito', 1000, 'middle');
+        console.log('Carrito vaciado exitosamente.');
+  
+      } catch (e) {
+        this.alerta.GenerarAlerta('Error', 'Error al procesar la compra: ' + JSON.stringify(e));
+      }
     }).catch(e => {
-        this.alerta.GenerarAlerta('Error', 'No se pudo obtener el usuario logueado: ' + JSON.stringify(e));
+      this.alerta.GenerarAlerta('Error', 'No se pudo obtener el usuario logueado: ' + JSON.stringify(e));
     });
-}
+  }
+  
 
 
   
@@ -142,11 +140,20 @@ export class CarritoPage implements OnInit {
     return precio * cantidad;
   }
   
-  sumar(album: any){
-    album.cantidad++;
-    this.bd.actualizarCantidad(album.cantidad,album.id_carrito)
-    this.calcularTotalCarrito(); // Recalcula el total después de sumar
+  sumar(album: any) {
+    this.bd.obtenerStockActual(album.id_album).then(stockDisponible => {
+      if (album.cantidad < stockDisponible) {
+        album.cantidad++;
+        this.bd.actualizarCantidad(album.cantidad, album.id_carrito);
+        this.calcularTotalCarrito(); // Recalcula el total después de sumar
+      } else {
+        this.toast.GenerarToast('No puedes añadir más de la cantidad disponible en stock', 1000, 'middle');
+      }
+    }).catch(error => {
+      console.error('Error al obtener stock disponible:', error);
+    });
   }
+  
 
   restar(album: any){
     if (album.cantidad > 1) {
