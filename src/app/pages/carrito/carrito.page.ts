@@ -72,49 +72,41 @@ export class CarritoPage implements OnInit {
       return;
     }
   
-    this.storage.getItem('usuario_logueado').then(async (idUsuario: any) => {
-      if (!idUsuario) {
-        this.alerta.GenerarAlerta('Error', 'No hay un usuario logueado.');
+    try {
+      const sinStock = [];
+      for (const album of this.listaCarrito) {
+        const stockDisponible = await this.bd.obtenerStockActual(album.id_album);
+        if (stockDisponible < album.cantidad) {
+          sinStock.push(album.nombre_album);
+        }
+      }
+  
+      if (sinStock.length > 0) {
+        const nombresSinStock = sinStock.join(', ');
+        this.alerta.GenerarAlerta('Error', `Los siguientes productos no tienen stock suficiente para completar la compra: ${nombresSinStock}`);
         return;
       }
   
-      try {
-        const sinStock = [];
-        for (const album of this.listaCarrito) {
-          const stockDisponible = await this.bd.obtenerStockActual(album.id_album);
+      await this.bd.registrarVenta(this.idusuario, this.totalCarrito, this.listaCarrito);
+      await this.bd.vaciarCarrito(this.idusuario);
   
-          if (stockDisponible < album.cantidad) {
-            sinStock.push(album.nombre_album);
-          }
+      // Asegurarse de que los datos se pasan correctamente al navegar a BoletaPage
+      this.router.navigate(['/boleta'], {
+        state: {
+          usuario: this.infoUsuario,
+          total: this.totalCarrito,
+          albums: this.listaCarrito
         }
+      });
   
-        if (sinStock.length > 0) {
-          const nombresSinStock = sinStock.join(', ');
-          this.alerta.GenerarAlerta('Error', `Los siguientes productos no tienen stock suficiente para completar la compra: ${nombresSinStock}`);
-          return;
-        }
+      this.toast.GenerarToast('Su compra fue realizada con éxito', 1000, 'middle');
+      console.log('Carrito vaciado exitosamente.');
   
-        await this.bd.registrarVenta(idUsuario, this.totalCarrito, this.listaCarrito);
-  
-        await this.bd.vaciarCarrito(idUsuario);
-        this.router.navigate(['/boleta'], {
-          state: {
-            usuario: this.infoUsuario,
-            total: this.totalCarrito,
-            albums: this.listaCarrito
-          }
-        });
-  
-        this.toast.GenerarToast('Su compra fue realizada con éxito', 1000, 'middle');
-        console.log('Carrito vaciado exitosamente.');
-  
-      } catch (e) {
-        this.alerta.GenerarAlerta('Error', 'Error al procesar la compra: ' + JSON.stringify(e));
-      }
-    }).catch(e => {
-      this.alerta.GenerarAlerta('Error', 'No se pudo obtener el usuario logueado: ' + JSON.stringify(e));
-    });
+    } catch (e) {
+      this.alerta.GenerarAlerta('Error', 'Error al procesar la compra: ' + JSON.stringify(e));
+    }
   }
+  
   
 
 

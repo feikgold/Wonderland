@@ -20,6 +20,8 @@ export class ServicebdService {
   //variable de conexión a la Base de Datos
   public database!: SQLiteObject;
   private stockCambiado = new Subject<void>(); // Nueva variable para eventos de stock
+  private lastVentaId: number | null = null; // Nuevo: almacena el ID de la última venta
+
 
   // Observable al que los componentes se pueden suscribir
   stockCambiado$ = this.stockCambiado.asObservable();
@@ -178,7 +180,7 @@ export class ServicebdService {
   crearBD() {
     this.platform.ready().then(() => {
       this.sqlite.create({
-        name: 'Wonderland54.db',
+        name: 'Wonderland55.db',
         location: 'default'
       }).then((db: SQLiteObject) => {
         this.database = db;
@@ -479,15 +481,15 @@ restaurarProducto(id_album: number) {
 
 traerUsuario(idUsuario: number) {
   return this.database.executeSql(
-    'SELECT usuario, correo_usuario, direccion FROM tablaUsuario WHERE id_usuario = ?;', 
+    'SELECT usuario, correo_usuario, direccion, foto_perfil FROM tablaUsuario WHERE id_usuario = ?;', 
     [idUsuario]
   ).then(res => {
     if (res.rows.length > 0) {
-      console.log('Datos obtenidos de la BD:', res.rows.item(0)); // Verificar valores
       return {
         usuario: res.rows.item(0).usuario,
         correo_usuario: res.rows.item(0).correo_usuario,
-        direccion: res.rows.item(0).direccion
+        direccion: res.rows.item(0).direccion,
+        foto_perfil: res.rows.item(0).foto_perfil || 'assets/icon/foto-perfil.jpg' // Default path if no profile picture
       };
     } else {
       this.alerta.GenerarAlerta('ERROR', 'Usuario no encontrado');
@@ -498,6 +500,7 @@ traerUsuario(idUsuario: number) {
     return null;
   });
 }
+
 
 
 
@@ -576,6 +579,7 @@ traerUsuario(idUsuario: number) {
       return false;
     }
   }
+  
   
   async obtenerFotoPerfil(id_usuario: number): Promise<string | null> {
     try {
@@ -823,48 +827,99 @@ async agregarCarrito(id_album: number, id_usuario: number, cantidad: number): Pr
 
   //VENTA
   // Método para registrar ventas con actualización del stock
-  async registrarVenta(id_usuario: number, total_venta: number, carrito: Carrito[]): Promise<void> {
-    try {
-      const resVenta = await this.database.executeSql(
-        'INSERT INTO tablaVenta (total_venta, id_usuario) VALUES (?, ?)',
-        [total_venta, id_usuario]
-      );
-      const id_venta = resVenta.insertId;
-  
-      let detallesCompra = [];
-  
-      for (const album of carrito) {
-        await this.database.executeSql(
-          'INSERT INTO tablaArticuloVenta (id_venta, id_album, cantidad) VALUES (?, ?, ?)',
-          [id_venta, album.id_album, album.cantidad]
-        );
-  
-        await this.database.executeSql(
-          'UPDATE tablaProducto SET stock = stock - ? WHERE id_album = ?',
-          [album.cantidad, album.id_album]
-        );
-  
-        detallesCompra.push({
-          nombre_album: album.nombre_album,
-          cantidad: album.cantidad,
-          precio: album.precio_album
-        });
-      }
-  
-      const detalleCompraJSON = JSON.stringify(detallesCompra);
+ // Método modificado para registrar ventas con actualización del stock y almacenar el ID de la venta
+ async registrarVenta(id_usuario: number, total_venta: number, carrito: Carrito[]): Promise<void> {
+  try {
+    const resVenta = await this.database.executeSql(
+      'INSERT INTO tablaVenta (total_venta, id_usuario) VALUES (?, ?)',
+      [total_venta, id_usuario]
+    );
+    this.lastVentaId = resVenta.insertId; // Almacena el ID de la última venta
+    const id_venta = resVenta.insertId;
+
+    for (const album of carrito) {
       await this.database.executeSql(
-        'INSERT INTO tablaHistorialCompras (id_usuario, total_compra, detalle_compra) VALUES (?, ?, ?)',
-        [id_usuario, total_venta, detalleCompraJSON]
+        'INSERT INTO tablaArticuloVenta (id_venta, id_album, cantidad) VALUES (?, ?, ?)',
+        [id_venta, album.id_album, album.cantidad]
       );
-  
-      this.emitirCambioStock();
-      console.log('Venta registrada y stock actualizado correctamente.');
-  
-    } catch (e) {
-      console.error('Error al registrar la venta:', e);
-      throw e;
+      await this.database.executeSql(
+        'UPDATE tablaProducto SET stock = stock - ? WHERE id_album = ?',
+        [album.cantidad, album.id_album]
+      );
     }
+
+    const detallesCompra = JSON.stringify(carrito.map(album => ({
+      nombre_album: album.nombre_album,
+      cantidad: album.cantidad,
+      precio: album.precio_album,
+    })));
+    await this.database.executeSql(
+      'INSERT INTO tablaHistorialCompras (id_usuario, total_compra, detalle_compra) VALUES (?, ?, ?)',
+      [id_usuario, total_venta, detallesCompra]
+    );
+    
+    this.emitirCambioStock();
+    console.log('Venta registrada y stock actualizado correctamente.');
+
+  } catch (e) {
+    console.error('Error al registrar la venta:', e);
+    throw e;
   }
+}
+
+getLastVentaId(): number | null {
+  return this.lastVentaId;
+}
+
+async obtenerDetallesVenta(id_venta: number): Promise<{usuario: any, total: number, albums: any[]}> {
+  try {
+    // Obtén la información del usuario y el total de la venta
+    const ventaRes = await this.database.executeSql(
+      `SELECT v.total_venta, u.usuario, u.correo_usuario 
+       FROM tablaVenta v 
+       JOIN tablaUsuario u ON v.id_usuario = u.id_usuario 
+       WHERE v.id_venta = ?`,
+      [id_venta]
+    );
+
+    if (ventaRes.rows.length === 0) {
+      throw new Error('Venta no encontrada');
+    }
+
+    const usuario = {
+      usuario: ventaRes.rows.item(0).usuario,
+      correo_usuario: ventaRes.rows.item(0).correo_usuario,
+    };
+    const total = ventaRes.rows.item(0).total_venta;
+
+    // Obtén los detalles de los álbumes comprados en la venta
+    const albumRes = await this.database.executeSql(
+      `SELECT p.nombre_album, p.nombre_artista, av.cantidad, p.precio_album 
+       FROM tablaArticuloVenta av 
+       JOIN tablaProducto p ON av.id_album = p.id_album 
+       WHERE av.id_venta = ?`,
+      [id_venta]
+    );
+
+    const albums = [];
+    for (let i = 0; i < albumRes.rows.length; i++) {
+      const album = albumRes.rows.item(i);
+      albums.push({
+        nombre_album: album.nombre_album,
+        nombre_artista: album.nombre_artista,
+        cantidad: album.cantidad,
+        precio_album: album.precio_album,
+      });
+    }
+
+    return { usuario, total, albums };
+
+  } catch (e) {
+    console.error('Error al obtener los detalles de la venta:', e);
+    throw e;
+  }
+}
+
   
   
   
@@ -961,6 +1016,8 @@ async agregarCarrito(id_album: number, id_usuario: number, cantidad: number): Pr
     });
   }
 
+  
+  
 
 
 }

@@ -13,21 +13,26 @@ import { ToastServiceService } from 'src/app/services/toast-service.service';
 })
 export class PerfilPage implements OnInit {
 
-  IDUSUARIO! : number;
+  IDUSUARIO!: number;
   foto: string = "";
   fotoNueva: string = "";
 
-  infoUsuario: any = {
+  infoUsuario: {
+    usuario: string;
+    correo_usuario: string;
+    direccion: string;
+    foto_perfil: string;
+  } = {
     usuario: '',
     correo_usuario: '',
     direccion: '',
-    foto_perfil: '' 
-  }; 
+    foto_perfil: 'assets/icon/foto-perfil.jpg' // Default path for profile picture
+  };
 
   constructor(
-    private bd : ServicebdService, 
-    private storage : NativeStorage, 
-    private alerta : AlertServiceService, 
+    private bd: ServicebdService, 
+    private storage: NativeStorage, 
+    private alerta: AlertServiceService, 
     private router: Router, 
     private camera: CamaraService, 
     private toast: ToastServiceService
@@ -63,9 +68,7 @@ export class PerfilPage implements OnInit {
       }
     };
 
-    // Navega a la página de modificación del perfil
     this.router.navigate(['/modificar-perfil'], navigationExtras).then(() => {
-      // Escucha cuando se regrese a la página de perfil y actualiza la información
       this.router.events.subscribe(() => {
         this.actualizarInfoUsuario();
       });
@@ -92,14 +95,14 @@ export class PerfilPage implements OnInit {
         const actualizacionExitosa = await this.bd.actualizarFotoPerfil(this.IDUSUARIO, resultado);
         if (actualizacionExitosa) {
           this.toast.GenerarToast('Imagen guardada correctamente', 2000, 'bottom');
-          this.actualizarInfoUsuario(); // Actualiza la información del perfil tras cambiar la foto
+          this.actualizarInfoUsuario();
         } else {
           this.toast.GenerarToast('No se pudo guardar la imagen.', 2000, 'bottom');
         }
       }
     } catch (error: any) {
       if (error === 'User cancelled photos app' || error.message === 'User cancelled photos app') {
-        return; // El usuario canceló la operación
+        return;
       } else {
         this.alerta.GenerarAlerta('Error', 'Error al ingresar imagen: ' + JSON.stringify(error));
       }

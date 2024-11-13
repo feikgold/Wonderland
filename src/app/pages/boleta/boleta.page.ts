@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { NativeStorage } from '@awesome-cordova-plugins/native-storage/ngx';
 import { ServicebdService } from 'src/app/services/servicebd.service';
 
 @Component({
@@ -9,45 +8,28 @@ import { ServicebdService } from 'src/app/services/servicebd.service';
   styleUrls: ['./boleta.page.scss'],
 })
 export class BoletaPage implements OnInit {
-
   infoUsuario: any = {};
   totalCarrito: number = 0;
   albumsComprados: any[] = [];
-  idusuario!: number;
 
   constructor(
     private router: Router,
-    private bd: ServicebdService,
-    private storage: NativeStorage
-  ) {
-    const nav = this.router.getCurrentNavigation();
-    if (nav && nav.extras.state) {
-      this.infoUsuario = nav.extras.state['usuario'] || {};  
-      this.totalCarrito = nav.extras.state['total'] || 0;
-      this.albumsComprados = nav.extras.state['albums'] || [];
+    private bd: ServicebdService
+  ) {}
 
-      console.log('Total en la boleta:', this.totalCarrito);
-      console.log('Álbumes comprados en la boleta:', this.albumsComprados);
-    } else {
-      console.warn('No se recibieron datos del estado de navegación.');
-    }
-  }
-
-  ngOnInit() {
-    this.obtenerIdUsuario();
-  }
-
-  async obtenerIdUsuario() {
-    try {
-      const usuario = await this.storage.getItem('usuario_logueado');
-      if (usuario && usuario.id_usuario) {
-        this.idusuario = usuario.id_usuario;
-        console.log('ID Usuario obtenido:', this.idusuario);
-      } else {
-        console.error('No se pudo obtener el ID del usuario');
+  async ngOnInit() {
+    const idVenta = this.bd.getLastVentaId();
+    if (idVenta) {
+      try {
+        const ventaDetalles = await this.bd.obtenerDetallesVenta(idVenta);
+        this.infoUsuario = ventaDetalles.usuario;
+        this.totalCarrito = ventaDetalles.total;
+        this.albumsComprados = ventaDetalles.albums;
+      } catch (e) {
+        console.error('Error al cargar los detalles de la compra:', e);
       }
-    } catch (error) {
-      console.error('Error al obtener el usuario logueado:', error);
+    } else {
+      console.warn('No se encontró el ID de la última venta.');
     }
   }
 

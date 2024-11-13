@@ -17,10 +17,10 @@
       <ion-card-content>
         <p><strong>Usuario:</strong> {{ infoUsuario.usuario }}</p>
         <p><strong>Correo:</strong> {{ infoUsuario.correo_usuario }}</p>
-        <p><strong>Total:</strong> {{ totalCarrito | currency:'$':'symbol':'1.0-0' }}</p>
+        <p><strong>Total de la Compra:</strong> {{ totalCarrito | currency:'$':'symbol':'1.0-0' }}</p>
       </ion-card-content>
     
-      <!-- Lista de Álbumes Comprados -->
+      <!-- Lista Detallada de Álbumes Comprados -->
       <ion-card-header>
         <ion-card-title class="compra-title">Álbumes Comprados</ion-card-title>
       </ion-card-header>
@@ -30,9 +30,10 @@
           <ion-item *ngFor="let album of albumsComprados">
             <ion-label>
               <h2>{{ album.nombre_album }}</h2>
-              <p>{{ album.nombre_artista }}</p>
-              <p>Cantidad: {{ album.cantidad }}</p>
-              <p>Precio: {{ album.precio_album | currency:'$':'symbol':'1.0-0' }}</p>
+              <p><strong>Artista:</strong> {{ album.nombre_artista }}</p>
+              <p><strong>Cantidad:</strong> {{ album.cantidad }}</p>
+              <p><strong>Precio Unitario:</strong> {{ album.precio_album | currency:'$':'symbol':'1.0-0' }}</p>
+              <p><strong>Subtotal:</strong> {{ album.precio_album * album.cantidad | currency:'$':'symbol':'1.0-0' }}</p>
             </ion-label>
           </ion-item>
         </ion-list>
