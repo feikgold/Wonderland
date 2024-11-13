@@ -50,7 +50,7 @@ export class ServicebdService {
   tablaArticuloVenta: string = "CREATE TABLE IF NOT EXISTS tablaArticuloVenta(id_articuloVenta INTEGER PRIMARY KEY AUTOINCREMENT, id_venta INTEGER NOT NULL, id_album INTEGER NOT NULL, cantidad INTEGER NOT NULL, FOREIGN KEY(id_venta) REFERENCES tablaVenta(id_venta) ON DELETE CASCADE, FOREIGN KEY (id_album) REFERENCES tablaProducto(id_album) ON DELETE CASCADE);";
 
 
-  tablaProducto: string = "CREATE TABLE IF NOT EXISTS tablaProducto(id_album INTEGER PRIMARY KEY AUTOINCREMENT, nombre_artista VARCHAR(100) NOT NULL, nombre_album VARCHAR(100) NOT NULL, precio_album INTEGER NOT NULL, detalle_album TEXT, portada_album TEXT,stock INTEGER DEFAULT 0, visible INTEGER DEFAULT 1);";
+  tablaProducto: string = "CREATE TABLE IF NOT EXISTS tablaProducto(id_album INTEGER PRIMARY KEY AUTOINCREMENT, nombre_artista VARCHAR(100) NOT NULL, nombre_album VARCHAR(100) NOT NULL, precio_album INTEGER NOT NULL, detalle_album TEXT, portada_album BLOB, stock INTEGER DEFAULT 0, visible INTEGER DEFAULT 1);";
 
   tablaCarrito: string = "CREATE TABLE IF NOT EXISTS tablaCarrito(id_carrito INTEGER PRIMARY KEY AUTOINCREMENT, cantidad INTEGER DEFAULT 1, id_album INTEGER NOT NULL, id_usuario INTEGER NOT NULL, FOREIGN KEY(id_usuario) REFERENCES tablaUsuario(id_usuario), FOREIGN KEY(id_album) REFERENCES tablaProducto(id_album));";
 
@@ -71,47 +71,47 @@ export class ServicebdService {
 
   registroProducto: string = `
   INSERT OR IGNORE INTO tablaProducto (nombre_artista, nombre_album, precio_album, detalle_album, portada_album, stock) VALUES
-  ('BTS', 'Wings', 21990, 'Incluye: Photocard, póster, CD, libro de letras', NULL, 20),
-  ('V', 'Layover', 16990, 'Incluye: Photocard, póster, sticker', NULL, 20),
-  ('BTS', 'Proof', 79990, 'Incluye: 3 CDs, photobook, mini póster, photocards', NULL, 20),
-  ('BTS', 'Butter', 26990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('BTS', 'Love Yourself Her', 23990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('BTS', 'Love Yourself Tear', 23990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('BTS', 'Love Yourself Answer', 24990, 'Incluye: 2 CDs, photocard, póster', NULL, 20),
-  ('BTS', 'Map Of The Soul 7', 31990, 'Incluye: Photocard, póster, stickers, photobook', NULL, 20),
-  ('JIN', 'The Astronaut', 23990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('Agust D', 'D-DAY', 25990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('JIMIN', 'FACE', 26990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('J-Hope', 'Jack In The Box', 24990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('JungKook', 'Golden', 29990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('JIMIN', 'Muse', 29990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('BTS', 'Are You Late Too [O!RUL8,2]', 23990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('BTS', '2 COOL 4 SKOOL', 17990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('BTS', 'Dark & Wild', 25990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('BTS', 'Map Of The Soul Persona', 24990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('BTS', 'Skool Luv Affair', 23990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('BTS', 'The Most Beautiful Moment in Life PT.1', 20990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('BTS', 'The Most Beautiful Moment in Life PT.2', 20990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('RM', 'Indigo', 26990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ATEEZ', 'Golden Hour Part.1', 29990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('ATEEZ', 'The World Ep.Fin : Will', 27990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ATEEZ', 'The World Ep.2 : Outlaw', 28990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ATEEZ', 'The World Ep.1 : Movement', 27990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ATEEZ', 'Zero : Fever Part.1', 32990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('ATEEZ', 'Zero : Fever Part.2', 29990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ATEEZ', 'Zero : Fever Part.3', 29990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ATEEZ', 'Beyond : Zero (Limited Edition)', 40990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('MINGI', '(Pre-Venta) Fix On / Off', 64990, 'Incluye: Photocard, póster, edición limitada', NULL, 20),
-  ('ATEEZ', 'Treasure Ep.1 : All To Zero', 20990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('ATEEZ', 'Treasure Ep.2 : Zero To One', 24990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ATEEZ', 'Treasure Ep.3 : One To All', 17990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ATEEZ', 'Treasure Ep.Fin : All To Action', 20990, 'Incluye: Photocard, póster, libro de letras', NULL, 20),
-  ('ENHYPEN', 'Romance : Untold', 28990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ENHYPEN', 'Orange Blood', 26990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ENHYPEN', 'Dark Blood', 27990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ENHYPEN', 'Border : Day One', 31990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ENHYPEN', 'Dimension : Dilema', 16990, 'Incluye: Photocard, póster, stickers', NULL, 20),
-  ('ENHYPEN', 'Memorabilia', 31990, 'Incluye: Photocard, póster, stickers', NULL, 20);
+  ('BTS', 'Wings', 21990, 'Incluye: Photocard, póster, CD, libro de letras', 'assets/icon/wings-detalle2.jpg', 20),
+  ('V', 'Layover', 16990, 'Incluye: Photocard, póster, sticker', 'assets/icon/layover.jpg', 20),
+  ('BTS', 'Proof', 79990, 'Incluye: 3 CDs, photobook, mini póster, photocards', 'assets/icon/proof.jpg', 20),
+  ('BTS', 'Butter', 26990, 'Incluye: Photocard, póster, stickers', 'assets/icon/butter.jpg', 20),
+  ('BTS', 'Love Yourself Her', 23990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/Love-Her-detalle.jpg', 20),
+  ('BTS', 'Love Yourself Tear', 23990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/love_your_tear.jpg', 20),
+  ('BTS', 'Love Yourself Answer', 24990, 'Incluye: 2 CDs, photocard, póster', 'assets/icon/love_your_answer.jpg', 20),
+  ('BTS', 'Map Of The Soul 7', 31990, 'Incluye: Photocard, póster, stickers, photobook', 'assets/icon/map_of_the_soul.jpg', 20),
+  ('JIN', 'The Astronaut', 23990, 'Incluye: Photocard, póster, stickers', 'assets/icon/astronaut.jpg', 20),
+  ('Agust D', 'D-DAY', 25990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/d_day.jpg', 20),
+  ('JIMIN', 'FACE', 26990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/face.jpg', 20),
+  ('J-Hope', 'Jack In The Box', 24990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/jack_in_the_box.jpg', 20),
+  ('JungKook', 'Golden', 29990, 'Incluye: Photocard, póster, stickers', 'assets/icon/jk_golden.jpg', 20),
+  ('JIMIN', 'Muse', 29990, 'Incluye: Photocard, póster, stickers', 'assets/icon/muse.jpg', 20),
+  ('BTS', 'Are You Late Too [O!RUL8,2]', 23990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/ohareyou.jpg', 20),
+  ('BTS', '2 COOL 4 SKOOL', 17990, 'Incluye: Photocard, póster, stickers', 'assets/icon/2kool4.jpg', 20),
+  ('BTS', 'Dark & Wild', 25990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/dark_wild.jpg', 20),
+  ('BTS', 'Map Of The Soul Persona', 24990, 'Incluye: Photocard, póster, stickers', 'assets/icon/persona.jpg', 20),
+  ('BTS', 'Skool Luv Affair', 23990, 'Incluye: Photocard, póster, stickers', 'assets/icon/skool_luv.jpg', 20),
+('BTS', 'The Most Beautiful Moment in Life PT.1', 20990, 'Incluye: Photocard, póster, stickers', 'assets/icon/the_most_1.jpg', 20),
+  ('BTS', 'The Most Beautiful Moment in Life PT.2', 20990, 'Incluye: Photocard, póster, stickers', 'assets/icon/the_most_2.jpg', 20),
+  ('RM', 'Indigo', 26990, 'Incluye: Photocard, póster, stickers', 'assets/icon/indigo.jpg', 20),
+  ('ATEEZ', 'Golden Hour Part.1', 29990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/golden_hour.jpg', 20),
+  ('ATEEZ', 'The World Ep.Fin : Will', 27990, 'Incluye: Photocard, póster, stickers', 'assets/icon/michinpum.jpg', 20),
+  ('ATEEZ', 'The World Ep.2 : Outlaw', 28990, 'Incluye: Photocard, póster, stickers', 'assets/icon/bouncy.jpg', 20),
+  ('ATEEZ', 'The World Ep.1 : Movement', 27990, 'Incluye: Photocard, póster, stickers', 'assets/icon/guerrilla.jpg', 20),
+  ('ATEEZ', 'Zero : Fever Part.1', 32990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/fever_1.jpg', 20),
+  ('ATEEZ', 'Zero : Fever Part.2', 29990, 'Incluye: Photocard, póster, stickers', 'assets/icon/fever_2.jpg', 20),
+  ('ATEEZ', 'Zero : Fever Part.3', 29990, 'Incluye: Photocard, póster, stickers', 'assets/icon/fever_3.jpg', 20),
+  ('ATEEZ', 'Beyond : Zero (Limited Edition)', 40990, 'Incluye: Photocard, póster, stickers', 'assets/icon/rocky.jpg', 20),
+  ('MINGI', '(Pre-Venta) Fix On / Off', 64990, 'Incluye: Photocard, póster, edición limitada', 'assets/icon/Mingi.jpg', 20),
+  ('ATEEZ', 'Treasure Ep.1 : All To Zero', 20990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/treasure_1.jpg', 20),
+  ('ATEEZ', 'Treasure Ep.2 : Zero To One', 24990, 'Incluye: Photocard, póster, stickers', 'assets/icon/treasure_2.jpg', 20),
+  ('ATEEZ', 'Treasure Ep.3 : One To All', 17990, 'Incluye: Photocard, póster, stickers', 'assets/icon/treasure_3.jpg', 20),
+  ('ATEEZ', 'Treasure Ep.Fin : All To Action', 20990, 'Incluye: Photocard, póster, libro de letras', 'assets/icon/treasure_fin_all.jpg', 20),
+  ('ENHYPEN', 'Romance : Untold', 28990, 'Incluye: Photocard, póster, stickers', 'assets/icon/xo.jpg', 20),
+  ('ENHYPEN', 'Orange Blood', 26990, 'Incluye: Photocard, póster, stickers', 'assets/icon/orange_blood.jpg', 20),
+  ('ENHYPEN', 'Dark Blood', 27990, 'Incluye: Photocard, póster, stickers', 'assets/icon/dark_blood.jpg', 20),
+  ('ENHYPEN', 'Border : Day One', 31990, 'Incluye: Photocard, póster, stickers', 'assets/icon/given_taken.jpg', 20),
+  ('ENHYPEN', 'Dimension : Dilema', 16990, 'Incluye: Photocard, póster, stickers', 'assets/icon/dimension_dilemma.jpg', 20),
+  ('ENHYPEN', 'Memorabilia', 31990, 'Incluye: Photocard, póster, stickers', 'assets/icon/memorabilia.jpg', 20);
 `;
 
 
@@ -180,7 +180,7 @@ export class ServicebdService {
   crearBD() {
     this.platform.ready().then(() => {
       this.sqlite.create({
-        name: 'Wonderland55.db',
+        name: 'Wonderland60.db',
         location: 'default'
       }).then((db: SQLiteObject) => {
         this.database = db;
